@@ -66,7 +66,7 @@ export interface ImageInputValues {
 
 export async function uploadFile(file: File): Promise<ImageInputValues> {
   const urlResponse = await client.api.initiateMediaUpload(new Empty());
-  const uploadURL = urlResponse.getUploadUrl();
+  const uploadURL = urlResponse.getUploadUrl().replace('http://127.0.0.1:5000', '');
 
   const requestBody = new FormData();
   requestBody.append("file", file);

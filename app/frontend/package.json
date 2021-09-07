@@ -137,5 +137,6 @@
       "!src/**/*.stories.tsx"
     ],
     "resetMocks": true
-  }
+  },
+  "proxy": "http://localhost:5000"
 }
