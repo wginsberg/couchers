@@ -208,9 +208,6 @@ class Auth(auth_pb2_grpc.AuthServicer):
                     if not self._username_available(request.account.username):
                         context.abort(grpc.StatusCode.FAILED_PRECONDITION, errors.USERNAME_NOT_AVAILABLE)
 
-                    abort_on_invalid_password(request.account.password, context)
-                    hashed_password = hash_password(request.account.password)
-
                     birthdate = parse_date(request.account.birthdate)
                     if not birthdate or birthdate >= minimum_allowed_birthdate():
                         context.abort(grpc.StatusCode.FAILED_PRECONDITION, errors.INVALID_BIRTHDATE)
@@ -224,8 +221,10 @@ class Auth(auth_pb2_grpc.AuthServicer):
                     if not request.account.accept_tos:
                         context.abort(grpc.StatusCode.INVALID_ARGUMENT, errors.MUST_ACCEPT_TOS)
 
+                    abort_on_invalid_password(request.account.password, context)
+
                     flow.username = request.account.username
-                    flow.hashed_password = hashed_password
+                    flow.hashed_password = hash_password(request.account.password)
                     flow.birthdate = birthdate
                     flow.gender = request.account.gender
                     flow.hosting_status = hostingstatus2sql[request.account.hosting_status]
@@ -342,7 +341,7 @@ class Auth(auth_pb2_grpc.AuthServicer):
 
         If the user has a password, returns NEED_PASSWORD.
 
-        If the user exists but does not have a password, generates a login token, send it in the email and returns SENT_LOGIN_EMAIL.
+        If the user exists but does not have a password, generates a login token, send it in the email and returns SENT_LOGIN_EMAIL.
         """
         logger.debug(f"Attempting login for {request.user=}")
         with session_scope() as session:
@@ -473,7 +472,7 @@ class Auth(auth_pb2_grpc.AuthServicer):
 
     def CompletePasswordReset(self, request, context):
         """
-        Completes the password reset: just clears the user's password
+        TODO: Completes the password reset: just clears the user's password
         """
         with session_scope() as session:
             res = session.execute(

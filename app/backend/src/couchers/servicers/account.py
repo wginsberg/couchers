@@ -37,23 +37,16 @@ contributeoption2api = {
 }
 
 
-def _check_password(user, field_name, request, context):
+def _check_password(user, password, context):
     """
-    Internal utility function: given a request with a StringValue `field_name` field, checks the password is correct or that the user does not have a password
+    Internal utility function: checks the password is correct
     """
-    if user.has_password:
-        # the user has a password
-        if not request.HasField(field_name):
-            # no password supplied
-            context.abort(grpc.StatusCode.INVALID_ARGUMENT, errors.MISSING_PASSWORD)
+    if not user.has_password:
+        # this should not happen, a user should be jailed if they don't have a pwd
+        raise Exception("User accessed secure API without password? Should've been jailed?")
 
-        if not verify_password(user.hashed_password, getattr(request, field_name).value):
-            # wrong password
-            context.abort(grpc.StatusCode.INVALID_ARGUMENT, errors.INVALID_USERNAME_OR_PASSWORD)
-
-    elif request.HasField(field_name):
-        # the user doesn't have a password, but one was supplied
-        context.abort(grpc.StatusCode.INVALID_ARGUMENT, errors.NO_PASSWORD)
+    if not verify_password(user.hashed_password, password):
+        context.abort(grpc.StatusCode.INVALID_ARGUMENT, errors.INVALID_USERNAME_OR_PASSWORD)
 
 
 def abort_on_invalid_password(password, context):
@@ -77,17 +70,9 @@ class Account(account_pb2_grpc.AccountServicer):
         with session_scope() as session:
             user = session.execute(select(User).where(User.id == context.user_id)).scalar_one()
 
-            if not user.has_password:
-                auth_info = dict(
-                    login_method=account_pb2.GetAccountInfoRes.LoginMethod.MAGIC_LINK,
-                    has_password=False,
-                )
-            else:
-                auth_info = dict(
-                    login_method=account_pb2.GetAccountInfoRes.LoginMethod.PASSWORD,
-                    has_password=True,
-                )
             return account_pb2.GetAccountInfoRes(
+                login_method=account_pb2.GetAccountInfoRes.LoginMethod.PASSWORD,
+                has_password=True,
                 username=user.username,
                 email=user.email,
                 phone=user.phone if user.phone_is_verified() else "",
@@ -99,26 +84,15 @@ class Account(account_pb2_grpc.AccountServicer):
     def ChangePassword(self, request, context):
         """
         Changes the user's password. They have to confirm their old password just in case.
-
-        If they didn't have an old password previously, then we don't check that.
         """
         with session_scope() as session:
             user = session.execute(select(User).where(User.id == context.user_id)).scalar_one()
 
-            if not request.HasField("old_password") and not request.HasField("new_password"):
-                context.abort(grpc.StatusCode.INVALID_ARGUMENT, errors.MISSING_BOTH_PASSWORDS)
+            _check_password(user, request.old_password, context)
 
-            _check_password(user, "old_password", request, context)
-
-            # password correct or no password
-
-            if not request.HasField("new_password"):
-                # the user wants to unset their password
-                user.hashed_password = None
-            else:
-                abort_on_invalid_password(request.new_password.value, context)
-                user.hashed_password = hash_password(request.new_password.value)
-
+            # password correct
+            abort_on_invalid_password(request.new_password, context)
+            user.hashed_password = hash_password(request.new_password)
             session.commit()
 
             send_password_changed_email(user)
@@ -139,7 +113,7 @@ class Account(account_pb2_grpc.AccountServicer):
             user = session.execute(select(User).where(User.id == context.user_id)).scalar_one()
 
             # check password first
-            _check_password(user, "password", request, context)
+            _check_password(user, request.password, context)
 
             # not a valid email
             if not is_valid_email(request.new_email):
