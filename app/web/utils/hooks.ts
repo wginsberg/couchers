@@ -11,6 +11,7 @@ import {
 } from "react";
 import {
   filterDuplicatePlaces,
+  filterImportantPlaces,
   NominatimPlace,
   simplifyPlaceDisplayName,
 } from "utils/nominatim";
@@ -88,7 +89,8 @@ const useGeocodeQuery = () => {
       if (nominatimResults.length === 0) {
         setResults([]);
       } else {
-        const filteredResults = filterDuplicatePlaces(nominatimResults);
+        const dedupedResults = filterDuplicatePlaces(nominatimResults);
+        const filteredResults = filterImportantPlaces(dedupedResults);
         const formattedResults = filteredResults.map((result) => ({
           location: new LngLat(Number(result["lon"]), Number(result["lat"])),
           name: result["display_name"],

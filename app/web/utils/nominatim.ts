@@ -1,3 +1,6 @@
+const MIN_IMPORTANCE_SCORE = 0.4;
+const MIN_RESULTS_LENGTH = 3;
+
 export interface NominatimPlace {
   address: {
     [city: string]: string;
@@ -54,4 +57,20 @@ export const filterDuplicatePlaces = (places: NominatimPlace[] = []) => {
   }, {} as Record<string, NominatimPlace>);
 
   return Object.values(deduplicatedPlaces);
+};
+
+export const filterImportantPlaces = (places: NominatimPlace[] = []) => {
+  const importantPlaces = places.filter(
+    ({ importance }) => importance >= MIN_IMPORTANCE_SCORE
+  );
+  const unimportantPlaces = places.filter(
+    ({ importance = 0 }) => importance < MIN_IMPORTANCE_SCORE
+  );
+
+  const numPlacesToPad = Math.max(
+    0,
+    MIN_RESULTS_LENGTH - importantPlaces.length
+  );
+
+  return [...importantPlaces, ...unimportantPlaces.slice(0, numPlacesToPad)];
 };
