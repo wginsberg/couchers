@@ -3430,10 +3430,10 @@
   dependencies:
     "@babel/runtime" "^7.12.5"
 
-"@toast-ui/editor@^3.1.1":
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/@toast-ui/editor/-/editor-3.1.2.tgz#b7d73c69e9bc0b6da346b9171b81df12f3dde49c"
-  integrity sha512-3If4pnDULrduyiWP9gLZKNqeK2FatzNa8APU6eV/bEDAXJqbCJFahNDivMPtR5k7iZMtkdE1ez1FphueHyjmUQ==
+"@toast-ui/editor@^3.1.5":
+  version "3.1.5"
+  resolved "https://registry.yarnpkg.com/@toast-ui/editor/-/editor-3.1.5.tgz#b47c3d94c23a4f0f6a653975b0b4b35b0035d31f"
+  integrity sha512-epcZIcoJ5x7TI8mCvDXEvmAHEjPAyGVfqZDrjx9QpSOYlyW4ZAZfQ36QG4QbWVXVdJrwUoh4w9pMjOThYSSbLQ==
   dependencies:
     dompurify "^2.3.3"
     prosemirror-commands "^1.1.9"
