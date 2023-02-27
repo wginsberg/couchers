@@ -16,7 +16,7 @@ click==8.0.3
     # via flask
 flask==2.0.2
     # via -r requirements.in
-grpcio==1.43.0
+grpcio==1.51.3
     # via -r requirements.in
 iniconfig==1.1.1
     # via pytest
@@ -46,8 +46,6 @@ pytest==7.0.0
     # via -r requirements.in
 pyvips==2.1.16
     # via -r requirements.in
-six==1.16.0
-    # via grpcio
 tomli==2.0.0
     # via pytest
 uwsgi==2.0.20
